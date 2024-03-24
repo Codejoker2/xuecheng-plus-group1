@@ -1,4 +1,4 @@
-package com.xuecheng.po;
+package com.xuecheng.model.po;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;

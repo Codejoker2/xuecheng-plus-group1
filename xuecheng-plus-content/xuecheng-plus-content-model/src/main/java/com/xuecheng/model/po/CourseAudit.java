@@ -1,4 +1,4 @@
-package com.xuecheng.po;
+package com.xuecheng.model.po;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

@@ -1,5 +1,7 @@
-package com.xuecheng.po;
+package com.xuecheng.model.po;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
@@ -14,18 +16,19 @@ import java.time.LocalDateTime;
  * @author weichuan
  */
 @Data
-@TableName("mq_message_history")
-public class MqMessageHistory implements Serializable {
+@TableName("mq_message")
+public class MqMessage implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     /**
      * 消息id
      */
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 消息类型代码
+     * 消息类型代码: course_publish ,  media_test
      */
     private String messageType;
 
@@ -50,9 +53,9 @@ public class MqMessageHistory implements Serializable {
     private Integer executeNum;
 
     /**
-     * 处理状态，0:初始，1:成功，2:失败
+     * 处理状态，0:初始，1:成功
      */
-    private Integer state;
+    private String state;
 
     /**
      * 回复失败时间
@@ -74,12 +77,24 @@ public class MqMessageHistory implements Serializable {
      */
     private LocalDateTime executeDate;
 
+    /**
+     * 阶段1处理状态, 0:初始，1:成功
+     */
     private String stageState1;
 
+    /**
+     * 阶段2处理状态, 0:初始，1:成功
+     */
     private String stageState2;
 
+    /**
+     * 阶段3处理状态, 0:初始，1:成功
+     */
     private String stageState3;
 
+    /**
+     * 阶段4处理状态, 0:初始，1:成功
+     */
     private String stageState4;
 
 
