@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * @author zengweichuan
- * @description
+ * @description 内容管理服务启动类
  * @date 2024/3/24
  */
 @SpringBootApplication
