@@ -1,14 +1,16 @@
 package com.xuecheng.content.api;
 
+import com.xuecheng.content.model.dto.AddCourseDto;
+import com.xuecheng.content.model.dto.CourseBaseInfoDto;
+import com.xuecheng.content.service.CourseBaseInfoService;
 import com.xuecheng.model.PageParams;
 import com.xuecheng.model.PageResult;
-import com.xuecheng.model.dto.QueryCourseParamsDto;
-import com.xuecheng.model.po.CourseBase;
+import com.xuecheng.content.model.dto.QueryCourseParamsDto;
+import com.xuecheng.content.model.po.CourseBase;
 import io.swagger.annotations.Api;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 
 /**
  * @author zengweichuan
@@ -17,13 +19,21 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Api(value = "课程信息编辑接口",tags = "课程信息编辑接口")
 @RestController
-@RequestMapping("/cource")
+@RequestMapping("/course")
 public class CourseBaseInfoController {
 
+    @Resource
+    private CourseBaseInfoService courseBaseInfoService;
     @PostMapping("/list")
     public PageResult<CourseBase> list(PageParams pageParams, @RequestBody(required = false) QueryCourseParamsDto queryCourseParamsDto){
+        PageResult<CourseBase> courseBasePageResult = courseBaseInfoService.queryCourseBaseList(pageParams, queryCourseParamsDto);
+        return courseBasePageResult;
+    }
 
-        return null;
+    @PostMapping
+    public CourseBaseInfoDto createCourseBase(@RequestBody AddCourseDto addCourseDto){
+        CourseBaseInfoDto courseBase = courseBaseInfoService.createCourseBase(addCourseDto);
+        return courseBase;
     }
 
 }
