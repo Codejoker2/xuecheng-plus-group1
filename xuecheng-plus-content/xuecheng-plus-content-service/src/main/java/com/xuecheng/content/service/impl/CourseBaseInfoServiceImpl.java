@@ -91,34 +91,7 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
     //插入课程基本信息表
     private CourseBase saveCorseBase(AddCourseDto addCourseDto){
 
-        //进行校验数据
-        if (StringUtils.isBlank(addCourseDto.getName())) {
-            throw new XuechengPlusException("课程名称为空");
-        }
-
-        if (StringUtils.isBlank(addCourseDto.getMt())) {
-            throw new XuechengPlusException("课程分类为空");
-        }
-
-        if (StringUtils.isBlank(addCourseDto.getSt())) {
-            throw new XuechengPlusException("课程分类为空");
-        }
-
-        if (StringUtils.isBlank(addCourseDto.getGrade())) {
-            throw new XuechengPlusException("课程等级为空");
-        }
-
-        if (StringUtils.isBlank(addCourseDto.getTeachmode())) {
-            throw new XuechengPlusException("教育模式为空");
-        }
-
-        if (StringUtils.isBlank(addCourseDto.getUsers())) {
-            throw new XuechengPlusException("适应人群为空");
-        }
-
-        if (StringUtils.isBlank(addCourseDto.getCharge())) {
-            throw new XuechengPlusException("收费规则为空");
-        }
+        //改为使用框架进行校验数据,使用注解在Controller层进行校验
         //插入到课程信息表
         CourseBase courseBaseNew = new CourseBase();
         BeanUtils.copyProperties(addCourseDto,courseBaseNew);

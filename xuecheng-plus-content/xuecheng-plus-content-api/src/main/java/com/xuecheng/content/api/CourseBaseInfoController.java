@@ -3,11 +3,13 @@ package com.xuecheng.content.api;
 import com.xuecheng.content.model.dto.AddCourseDto;
 import com.xuecheng.content.model.dto.CourseBaseInfoDto;
 import com.xuecheng.content.service.CourseBaseInfoService;
+import com.xuecheng.exception.ValidationGroups;
 import com.xuecheng.model.PageParams;
 import com.xuecheng.model.PageResult;
 import com.xuecheng.content.model.dto.QueryCourseParamsDto;
 import com.xuecheng.content.model.po.CourseBase;
 import io.swagger.annotations.Api;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -31,7 +33,7 @@ public class CourseBaseInfoController {
     }
 
     @PostMapping
-    public CourseBaseInfoDto createCourseBase(@RequestBody AddCourseDto addCourseDto){
+    public CourseBaseInfoDto createCourseBase(@RequestBody @Validated(ValidationGroups.Inster.class) AddCourseDto addCourseDto){
         CourseBaseInfoDto courseBase = courseBaseInfoService.createCourseBase(addCourseDto);
         return courseBase;
     }
