@@ -2,6 +2,7 @@ package com.xuecheng.content.api;
 
 import com.xuecheng.content.model.dto.AddCourseDto;
 import com.xuecheng.content.model.dto.CourseBaseInfoDto;
+import com.xuecheng.content.model.dto.EditCourseDto;
 import com.xuecheng.content.service.CourseBaseInfoService;
 import com.xuecheng.exception.ValidationGroups;
 import com.xuecheng.model.PageParams;
@@ -36,6 +37,19 @@ public class CourseBaseInfoController {
     public CourseBaseInfoDto createCourseBase(@RequestBody @Validated(ValidationGroups.Inster.class) AddCourseDto addCourseDto){
         CourseBaseInfoDto courseBase = courseBaseInfoService.createCourseBase(addCourseDto);
         return courseBase;
+    }
+
+    @GetMapping("{courseId}")
+    public CourseBaseInfoDto getCourseBaseById(@PathVariable Long courseId){
+        return courseBaseInfoService.getCourseBaseById(courseId);
+    }
+
+    @PutMapping
+    public CourseBaseInfoDto updateCourseBase(@RequestBody @Validated(ValidationGroups.Update.class)EditCourseDto editCourseDto){
+        //机构id，由于认证系统没有上线暂时硬编码
+        Long companyId = 1232141425L;
+
+        return courseBaseInfoService.updateCourseBase(companyId,editCourseDto);
     }
 
 }
