@@ -57,6 +57,12 @@
         <artifactId>swagger-spring-boot-starter</artifactId>
         <version>1.9.0.RELEASE</version>
     </dependency>
+
+<!--        SpringBoot集成Nacos-->
+    <dependency>
+        <groupId>com.alibaba.cloud</groupId>
+        <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+    </dependency>
     </dependencies>
 
 </project>
