@@ -7,7 +7,6 @@ import com.xuecheng.content.model.dto.QueryCourseParamsDto;
 import com.xuecheng.content.model.po.CourseBase;
 import com.xuecheng.model.PageParams;
 import com.xuecheng.model.PageResult;
-import org.springframework.stereotype.Service;
 
 /**
  * @author zengweichuan
@@ -23,4 +22,6 @@ public interface CourseBaseInfoService {
     CourseBaseInfoDto getCourseBaseById(Long courseId);
 
     CourseBaseInfoDto updateCourseBase(Long companyId,EditCourseDto editCourseDto);
+
+    void delCourseBase(Long courseId);
 }
