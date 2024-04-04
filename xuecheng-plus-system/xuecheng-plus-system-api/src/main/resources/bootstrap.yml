@@ -1,7 +1,7 @@
 server:
   servlet:
     context-path: /system
-  port: 63111
+  port: 63110
 #微服务配置
 spring:
   application:
