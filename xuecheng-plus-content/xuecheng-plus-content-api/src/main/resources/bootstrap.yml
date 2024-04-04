@@ -12,19 +12,46 @@ spring:
       discovery:
         namespace: dev
         group: xuecheng-plus-project
+      #配置文件需要spring.application.name +'-'+ profiles.active +'-'+ '.'+ config.file-extention
+      #拼接而成正好和nacos全局配置中心的配置文件一致
+      config:
+        namespace: dev
+        group: xuecheng-plus-project
+        file-extension: yaml
+        refresh-enabled: true
+        #扩展配置,将content-service的配置拿过来
+        extension-configs:
+          - data-id: content-service-${spring.profiles.active}.yaml
+            group: xuecheng-plus-project
+            refresh: true
+        shared-configs:
+          - data-id: swagger-${spring.profiles.active}.yaml
+            group: xuecheng-plus-common
+            refresh: true
+          - data-id: logging-${spring.profiles.active}.yaml
+            group: xuecheng-plus-common
+            refresh: true
+    ##本地配置在nacos配置中心优先级最低,为了方便调试,设置本地配置优先级最高(这个需要在nacos配置中心里配置)
+#  cloud:
+#    config:
+#      override-none: true
+  #profiles默认为dev
+  profiles:
+    active: dev
 
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.101.65:3306/xuecheng_content?serverTimezone=UTC&allowPublicKeyRetrieval=true&userUnicode=true&useSSL=false&
-    username: root
-    password: mysql
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://192.168.101.65:3306/xuecheng_content?serverTimezone=UTC&allowPublicKeyRetrieval=true&userUnicode=true&useSSL=false&
+#    username: root
+#    password: mysql
+
 # 日志文件配置路径
-logging:
-  config: classpath:log4j2-dev.xml
+#logging:
+#  config: classpath:log4j2-dev.xml
 
-swagger:
-  title: "学成在线内容管理系统"
-  description: "内容系统管理系统对课程相关信息进行管理"
-  base-package: com.xuecheng.content
-  enabled: true
-  version: 1.0.0
+#swagger:
+#  title: "学成在线内容管理系统"
+#  description: "内容系统管理系统对课程相关信息进行管理"
+#  base-package: com.xuecheng.content
+#  enabled: true
+#  version: 1.0.0
