@@ -1,6 +1,6 @@
 package com.xuecheng.content.model.dto;
 
-import com.xuecheng.exception.ValidationGroups;
+import com.xuecheng.base.exception.ValidationGroups;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;

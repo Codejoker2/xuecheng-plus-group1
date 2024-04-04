@@ -3,7 +3,7 @@ package com.xuecheng.content.api;
 import com.xuecheng.content.model.dto.AddCourseTeacherDto;
 import com.xuecheng.content.model.po.CourseTeacher;
 import com.xuecheng.content.service.CourseTeacherService;
-import com.xuecheng.exception.ValidationGroups;
+import com.xuecheng.base.exception.ValidationGroups;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 

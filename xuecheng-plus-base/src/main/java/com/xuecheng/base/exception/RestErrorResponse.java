@@ -1,4 +1,4 @@
-package com.xuecheng.exception;
+package com.xuecheng.base.exception;
 
 import lombok.Data;
 
