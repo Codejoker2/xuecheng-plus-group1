@@ -5,7 +5,7 @@ import com.xuecheng.content.mapper.CourseTeacherMapper;
 import com.xuecheng.content.model.dto.AddCourseTeacherDto;
 import com.xuecheng.content.model.po.CourseTeacher;
 import com.xuecheng.content.service.CourseTeacherService;
-import com.xuecheng.exception.XuechengPlusException;
+import com.xuecheng.base.exception.XuechengPlusException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
