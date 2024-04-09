@@ -1,4 +1,4 @@
-package com.xuecheng;
+package com.xuecheng.test;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.Test;
@@ -22,10 +22,9 @@ public class BigFileTest {
     public void testChunk() throws IOException {
         //源文件
         File sourceFile = new File("C:\\Users\\ZWC\\Videos\\1.mp4");
-
         //大文件分块
         //块大小
-        long chunkSize = 1024 * 1024 * 1;
+        long chunkSize = 1024 * 1024 * 5;
         //分块数量
         long chunkNum = (long) Math.ceil(sourceFile.length() * 1.0 / chunkSize);
         //存放在哪里

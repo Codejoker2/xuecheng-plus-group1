@@ -1,4 +1,4 @@
-package com.xuecheng;
+package com.xuecheng.test;
 
 import io.minio.*;
 import org.apache.commons.codec.digest.DigestUtils;
