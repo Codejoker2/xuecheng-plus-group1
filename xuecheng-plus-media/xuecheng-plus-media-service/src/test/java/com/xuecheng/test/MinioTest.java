@@ -50,7 +50,9 @@ public class MinioTest {
                 .credentials("minioadmin", "minioadmin")
                 .build();
 
-        RemoveObjectArgs mediafiles = RemoveObjectArgs.builder().bucket("mediafiles").object("Grand Theft Auto V 2024_2_7 19_17_26.png").build();
+        RemoveObjectArgs mediafiles = RemoveObjectArgs.builder()
+                .bucket("mediafiles")
+                .object("Grand Theft Auto V 2024_2_7 19_17_26.png").build();
 
         minioClient.removeObject(mediafiles);
     }

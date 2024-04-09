@@ -4,6 +4,7 @@ import io.minio.*;
 import io.minio.errors.*;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -21,6 +22,7 @@ import java.util.List;
  * @description
  * @date 2024/4/9
  */
+@Slf4j
 @SpringBootTest
 public class MinoTest2 {
 
@@ -80,5 +82,23 @@ public class MinoTest2 {
         //删除分块文件
         RemoveObjectsArgs args = RemoveObjectsArgs.builder().bucket(sources.get(0).bucket()).objects(deleteObjects).build();
         Iterable<Result<DeleteError>> results = minioClient.removeObjects(args);
+        //需要进行遍历results,不然无法删除
+        results.forEach(r->{
+            DeleteError deleteError = null;
+            try {
+                deleteError = r.get();
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.error("清楚分块文件失败,objectname:{}",deleteError.objectName(),e);
+            }
+        });
+    }
+
+    @Test
+    //获取文件信息
+    public void getFileInfo() throws Exception {
+        //获取合并后的文件大小
+        long video = minioClient.statObject(StatObjectArgs.builder().bucket("video").object("/5/4/549be5b53f9d4c71ecd2bba55b002b05/549be5b53f9d4c71ecd2bba55b002b05.mp4").build()).size();
+        System.out.println(video);
     }
 }
