@@ -289,7 +289,7 @@ public class MediaFileServiceImpl implements MediaFileService {
         if (!b)return RestResponse.validfail(false,"文件合并校验失败,最终上传失败.");
 
         //将文件保存到媒资数据库
-        addMediaFilesToDb(companyId,fileMd5,uploadFileParamsDto,bucketVideoFiles,mergeFilePath);
+        mediaFileService.addMediaFilesToDb(companyId,fileMd5,uploadFileParamsDto,bucketVideoFiles,mergeFilePath);
 
         return RestResponse.success(true);
     }
