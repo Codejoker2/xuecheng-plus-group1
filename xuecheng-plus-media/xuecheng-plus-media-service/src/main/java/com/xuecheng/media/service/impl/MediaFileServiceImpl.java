@@ -104,11 +104,21 @@ public class MediaFileServiceImpl implements MediaFileService {
 
     //获取文件md5
     private String getFileMD5(File file) {
+        FileInputStream inputStream = null;
         try {
-            return DigestUtils.md5Hex(new FileInputStream(file));
+            inputStream = new FileInputStream(file);
+            return DigestUtils.md5Hex(inputStream);
         } catch (Exception e) {
             e.getStackTrace();
             return null;
+        } finally {
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
