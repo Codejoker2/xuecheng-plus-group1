@@ -411,14 +411,14 @@ public class MediaFileServiceImpl implements MediaFileService {
 
     private boolean compareLocalAndMinoMd5(String bucket, String mergeFilePath) {
         //下载文件
-        File filePath = downloadFileFromMinIO(bucket, mergeFilePath);
+        File tempFile = downloadFileFromMinIO(bucket, mergeFilePath);
         //从文件路径获取原文件的md5值
         String md5FromMergeFilePath = getMD5FromMergeFilePath(mergeFilePath);
 
         FileInputStream inputStream = null;
         //从本地文件获取md5值
         try {
-            inputStream = new FileInputStream(filePath);
+            inputStream = new FileInputStream(tempFile);
             String downFileMd5 = DigestUtils.md5Hex(inputStream);
 
             inputStream.close();
@@ -430,6 +430,8 @@ public class MediaFileServiceImpl implements MediaFileService {
                 if (inputStream != null) {
                     inputStream.close();
                 }
+                //删除临时文件temp
+                tempFile.delete();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
