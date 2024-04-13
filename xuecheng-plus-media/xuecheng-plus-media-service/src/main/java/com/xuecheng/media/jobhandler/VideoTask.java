@@ -7,8 +7,13 @@ import com.xuecheng.media.service.MediaFileService;
 import com.xuecheng.media.service.MediaProcessService;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
+import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.RemoveObjectArgs;
+import io.minio.Result;
+import io.minio.errors.*;
+import io.minio.messages.Bucket;
+import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -18,7 +23,10 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -97,6 +105,53 @@ public class VideoTask {
     //Todo 增加一个重试次数为3后通知开发者邮件的功能
 
     //Todo 分片文件清理
+    @XxlJob("cleanUnUploadCompleteFileChunk")
+    public void cleanUnUploadCompleteFileChunk() {
+        //查询media_files中没有上传完毕的文件
+        List<MediaFiles> mediaFiles = mediaFileService.unUploadCompleteChunk();
+        //过滤出已超时的文件
+        List<MediaFiles> overDeadLineFiles = mediaFiles.stream()
+                .filter(mediaFiles1->LocalDateTime.now().minusMinutes(1).isAfter(mediaFiles1.getCreateDate()))
+                .collect(Collectors.toList());
+        //桶名称
+        String bucket = overDeadLineFiles.get(0).getBucket();
+        //清除这些未上传完毕的文件分块
+        //待删除列表
+        List<String> objectNames = new ArrayList<>();
+        for (MediaFiles overDeadLineFile : overDeadLineFiles) {
+            ListObjectsArgs args = ListObjectsArgs.builder()
+                    .bucket(overDeadLineFile.getBucket())
+                    .prefix(overDeadLineFile.getFilePath()) // 设置前缀为要删除的文件夹名称
+                    .recursive(true)    //递归遍历所有文件
+                    .build();
+            Iterable<Result<Item>> results = minioClient.listObjects(args);
+
+            //将要删除的文件存放到待删除列表
+            for (Result<Item> result : results) {
+                try {
+                    Item item = result.get();
+                    objectNames.add(item.objectName());
+                } catch (Exception e) {
+                    log.error("将要删除的文件存放到待删除列表出错:{}",e.getMessage(),e);
+                    throw new RuntimeException();
+                }
+            }
+        }
+
+        //开始删除
+        for (String objectName : objectNames) {
+            RemoveObjectArgs removeObjectArgs = RemoveObjectArgs.builder().bucket(bucket).object(objectName).build();
+            try {
+                minioClient.removeObject(removeObjectArgs);
+            } catch (Exception e) {
+                log.error("删除未上传的文件出错,文件桶:{},文件路径:{},出错原因:{}",bucket,objectName,e.getMessage(),e);
+                throw new RuntimeException(e);
+            }
+        }
+        //删除完之后需要删除数据库对应的记录
+        mediaFileService.delUnUploadComplete(overDeadLineFiles);
+
+    }
 
     private File downloadFileFromMinIO(MediaProcess mediaProcess) {
         File tempFile = mediaFileService.downloadFileFromMinIO(mediaProcess.getBucket(), mediaProcess.getFilePath());
@@ -141,7 +196,7 @@ public class VideoTask {
 
     //处理任务
     private void processing(List<MediaProcess> mediaProcessList) {
-        if (mediaProcessList.size() <= 0 )return;
+        if (mediaProcessList.size() <= 0) return;
 
         //线程计数器
         CountDownLatch countDownLatch = new CountDownLatch(mediaProcessList.size());
@@ -198,7 +253,7 @@ public class VideoTask {
                     //先查询该文件信息
                     MediaFiles mediaFiles = mediaFileService.selectById(fileId);
                     String filename = mediaFiles.getFilename();
-                    filename = filename.substring(0,filename.indexOf(".")) + ".mp4";
+                    filename = filename.substring(0, filename.indexOf(".")) + ".mp4";
 
                     mediaFiles.setId(fileId);
                     mediaFiles.setFilename(filename);

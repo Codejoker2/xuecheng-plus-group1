@@ -129,4 +129,8 @@ public interface MediaFileService {
     int updateFileURL(MediaFiles mediaFiles);
 
     MediaFiles selectById(String fileId);
+
+    List<MediaFiles> unUploadCompleteChunk();
+
+    int delUnUploadComplete(List<MediaFiles> mediaFiles);
 }

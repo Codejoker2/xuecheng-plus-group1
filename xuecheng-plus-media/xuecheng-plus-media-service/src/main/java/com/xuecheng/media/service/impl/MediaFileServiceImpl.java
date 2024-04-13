@@ -36,6 +36,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Mr.M
@@ -162,8 +163,8 @@ public class MediaFileServiceImpl implements MediaFileService {
         //从数据库中查询文件
         MediaFiles mediaFiles = mediaFilesMapper.selectById(fileMd5);
 
-        //文件已存在就不操作数据库
-        if (mediaFiles != null){
+        //文件已存在并且上传成功就不操作数据库
+        if (mediaFiles != null && mediaFiles.getUploadStatus().equals("2")){
             //如果是视频文件的话就需要考虑视频转码,所以需要考虑视频文件保存到媒资的待处理任务表(media_process)中
             addWaitingTask(mediaFiles);
             log.debug("保存到待处理文件表成功:{}",mediaFiles);
@@ -181,9 +182,10 @@ public class MediaFileServiceImpl implements MediaFileService {
         mediaFiles.setCreateDate(LocalDateTime.now());
         mediaFiles.setAuditStatus("002003");
         mediaFiles.setStatus("1");
+        mediaFiles.setUploadStatus("2");
 
-        int insert = mediaFilesMapper.insert(mediaFiles);
-        if (insert <= 0) {
+        int update = mediaFilesMapper.updateById(mediaFiles);
+        if (update <= 0) {
             log.error("保存文件到数据库失败,{}", mediaFiles);
             throw new XuechengPlusException("保存文件信息失败!");
         }
@@ -272,6 +274,19 @@ public class MediaFileServiceImpl implements MediaFileService {
             }
         }
         //其他情况说明文件不存在
+        //删掉media_files表中对应的fileId的文件(数据库存在但minio不存在),后面统一插入
+        mediaFilesMapper.deleteById(fileMd5);
+        //插入一个初始化的media_files
+        MediaFiles newMediaFile = new MediaFiles();
+        newMediaFile.setId(fileMd5);
+        newMediaFile.setFilename(fileMd5);
+        newMediaFile.setFileId(fileMd5);
+        newMediaFile.setUploadStatus("1");
+        newMediaFile.setBucket(bucketVideoFiles);
+        newMediaFile.setCreateDate(LocalDateTime.now());
+        //默认设置为分块文件夹的位置
+        newMediaFile.setFilePath(getchunkFileFolderPath(fileMd5));
+        mediaFilesMapper.insert(newMediaFile);
         return RestResponse.success(false);
     }
 
@@ -410,6 +425,19 @@ public class MediaFileServiceImpl implements MediaFileService {
     @Override
     public MediaFiles selectById(String fileId) {
         return mediaFilesMapper.selectById(fileId);
+    }
+
+    @Override
+    public List<MediaFiles> unUploadCompleteChunk() {
+        LambdaQueryWrapper<MediaFiles> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MediaFiles::getUploadStatus,"1");
+        return mediaFilesMapper.selectList(wrapper);
+    }
+
+    @Override
+    public int delUnUploadComplete(List<MediaFiles> mediaFiles) {
+        List<String> ids = mediaFiles.stream().map(item->item.getFileId()).collect(Collectors.toList());
+        return mediaFilesMapper.deleteBatchIds(ids);
     }
 
     // 删除有bug,在断点续传后删除时总是卡住,总是在关闭springboot服务器时才真正删除(把能关闭的流都关闭了,不然有各种各样的bug)

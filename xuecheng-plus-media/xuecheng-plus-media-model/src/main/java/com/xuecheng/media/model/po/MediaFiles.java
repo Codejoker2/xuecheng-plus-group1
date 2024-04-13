@@ -114,4 +114,9 @@ public class MediaFiles implements Serializable {
      */
     private Long fileSize;
 
+    /**
+     * 文件上传状态 1:上传中 2:上传完毕
+     */
+    private String uploadStatus;
+
 }
