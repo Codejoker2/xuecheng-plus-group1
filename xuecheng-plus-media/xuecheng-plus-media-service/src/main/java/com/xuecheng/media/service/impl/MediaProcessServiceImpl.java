@@ -52,6 +52,14 @@ public class MediaProcessServiceImpl implements MediaProcessService {
             mediaProcessMapper.update(mediaProcess, wrapper);
             return;
         }
+        //更新任务状态为处理中,并将create_time进行更新,将create_time作为更新时间
+        if(status.equals("4")){
+            MediaProcess mediaProcess = new MediaProcess();
+            mediaProcess.setStatus(status);
+            mediaProcess.setCreateDate(LocalDateTime.now());
+            mediaProcessMapper.update(mediaProcess, wrapper);
+            return;
+        }
         //处理成功,更新url和状态
         mediaProcessFromDb.setUrl(url);
         mediaProcessFromDb.setStatus("2");
@@ -63,5 +71,10 @@ public class MediaProcessServiceImpl implements MediaProcessService {
         mediaProcessHistoryMapper.insert(mediaProcessHistory);
         //将任务迁移到任务历史表中,从process表中删除
         mediaProcessMapper.deleteById(mediaProcessFromDb.getId());
+    }
+
+    @Override
+    public List<MediaProcess> selectListByShardIndexAndProcessing(int count) {
+        return mediaProcessMapper.selectListByShardIndexAndProcessing(count);
     }
 }

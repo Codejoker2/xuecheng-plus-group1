@@ -25,4 +25,12 @@
         and fail_count &lt; 3
         limit #{count}
     </select>
+
+    <select id="selectListByShardIndexAndProcessing" resultMap="BaseResultMap">
+        select * from media_process where
+                                       (status = '1' or status = '3')
+                                      and fail_count &lt; 3
+                                      and status = 4
+            limit #{count}
+    </select>
 </mapper>

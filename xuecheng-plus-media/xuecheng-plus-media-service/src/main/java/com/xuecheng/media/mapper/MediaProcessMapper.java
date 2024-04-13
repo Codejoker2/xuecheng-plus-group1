@@ -19,5 +19,5 @@ public interface MediaProcessMapper extends BaseMapper<MediaProcess> {
     List<MediaProcess> selectListByShardIndex(@Param("shardIndex") int shardIndex,
                                               @Param("shardTotal") int shardTotal,
                                               @Param("count") int count);
-
+    List<MediaProcess> selectListByShardIndexAndProcessing(@Param("count") int count);
 }

@@ -34,4 +34,6 @@ public interface MediaProcessService {
      */
     void saveProcessFinishStatus(Long taskId,String status,String fileId,String url,String errorMsg);
 
+    List<MediaProcess> selectListByShardIndexAndProcessing(int count);
+
 }
