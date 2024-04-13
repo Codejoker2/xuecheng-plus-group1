@@ -19,4 +19,10 @@
         id, file_id, filename, bucket, status, create_date, finish_date, url
     </sql>
 
+    <select id="selectListByShardIndex" resultMap="BaseResultMap">
+        select * from media_process where id % #{shardTotal} = #{shardIndex}
+        and (status = '1' or status = '3')
+        and fail_count &lt; 3
+        limit #{count}
+    </select>
 </mapper>

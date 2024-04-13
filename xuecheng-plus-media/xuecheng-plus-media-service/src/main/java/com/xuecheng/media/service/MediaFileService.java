@@ -9,6 +9,7 @@ import com.xuecheng.media.model.dto.UploadFileResultDto;
 import com.xuecheng.media.model.po.MediaFiles;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -80,4 +81,44 @@ public interface MediaFileService {
   * @date 2022/9/13 15:56
   */
  public RestResponse mergechunks(Long companyId,String fileMd5,int chunkTotal,UploadFileParamsDto uploadFileParamsDto);
+
+ /**
+  * 返回下载后保存到本地的文件路径
+  * @param bucket 桶
+  * @param mergeFilePath 路径
+  * @return
+  */
+ public File downloadFileFromMinIO(String bucket, String mergeFilePath);
+
+ /**
+  * 根据文件名获取mimetype
+  * @param fileName
+  * @return
+  */
+ public String getMimeType(String fileName);
+
+ /**
+  * 返回是否已经上传到minio
+  * @param bucket 桶
+  * @param mimeType 文件类型
+  * @param objectName 路径
+  * @param localFilePath 本地路径
+  * @return
+  */
+ public boolean addMediaFilesToMinIO(String bucket, String mimeType, String objectName, String localFilePath);
+
+ /**
+  *
+  * @param file
+  * @return
+  */
+ public String getFileMD5(File file);
+
+ /**
+  *  根据md5值生成minio文件路径
+  * @param fileMd5 md5
+  * @param fileExt 文件扩展名
+  * @return
+  */
+ public String getFilePathByMd5(String fileMd5, String fileExt);
 }

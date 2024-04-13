@@ -39,7 +39,7 @@ public class SampleXxlJob {
     public void demoJobHandler() throws Exception {
         System.out.println("XXL-JOB,Hello World");
     }
-    @XxlJob("shardingJobHandler")
+/*    @XxlJob("shardingJobHandler")
     public void shardingJobHandler() throws Exception {
 
         // 分片参数
@@ -49,7 +49,7 @@ public class SampleXxlJob {
         log.info("分片参数：当前分片序号 = {}, 总分片数 = {}", shardIndex, shardTotal);
         log.info("开始执行第"+shardIndex+"批任务");
 
-    }
+    }*/
 
 
   /*  *//**
