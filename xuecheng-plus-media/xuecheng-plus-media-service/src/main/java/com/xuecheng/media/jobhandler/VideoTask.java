@@ -1,11 +1,14 @@
 package com.xuecheng.media.jobhandler;
 
 import com.xuecheng.base.utils.Mp4VideoUtil;
+import com.xuecheng.media.model.po.MediaFiles;
 import com.xuecheng.media.model.po.MediaProcess;
 import com.xuecheng.media.service.MediaFileService;
 import com.xuecheng.media.service.MediaProcessService;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
+import io.minio.MinioClient;
+import io.minio.RemoveObjectArgs;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -43,6 +46,9 @@ public class VideoTask {
 
     @Value("${videoprocess.ffmpegpath}")
     private String ffmpegpath;
+
+    @Resource
+    private MinioClient minioClient;
 
     /**
      * 非mp4视频转码成mp4
@@ -84,7 +90,7 @@ public class VideoTask {
         List<MediaProcess> retryList = mediaProcessList.stream()
                 .filter(mediaProcess->LocalDateTime.now().minusMinutes(30).isAfter(mediaProcess.getCreateDate()))
                 .collect(Collectors.toList());
-        if(retryList.size() <= 0)return;
+        if (retryList.size() <= 0) return;
         //进行转码工作
         processing(mediaProcessList);
     }
@@ -135,6 +141,8 @@ public class VideoTask {
 
     //处理任务
     private void processing(List<MediaProcess> mediaProcessList) {
+        if (mediaProcessList.size() <= 0 )return;
+
         //线程计数器
         CountDownLatch countDownLatch = new CountDownLatch(mediaProcessList.size());
         //开启线程池
@@ -159,7 +167,7 @@ public class VideoTask {
 
                     //3.下载成功
                     String bucket = mediaProcess.getBucket();
-                    String filePath = mediaProcess.getFilePath();
+                    String origFilePath = mediaProcess.getFilePath();
 
                     //4.处理视频,转换视频格式
                     File mp4File = transformToMp4(tempFile, mediaProcess);
@@ -170,13 +178,36 @@ public class VideoTask {
                     String fileId = mediaProcess.getFileId();
                     //获取minio的文件路径
                     String minioPath = mediaFileService.getFilePathByMd5(fileId, ".mp4");
+
                     boolean b = mediaFileService.addMediaFilesToMinIO(bucket, "video/mp4", minioPath, mp4File.getAbsolutePath());
                     if (!b) {
-                        log.error("上传文件失败,本机文件位置:{},目标文件位置:{}", mp4File.getAbsolutePath(), bucket + filePath);
+                        log.error("上传文件失败,本机文件位置:{},目标文件位置:{}", mp4File.getAbsolutePath(), bucket + origFilePath);
                     }
+                    //5.删除原来的avi文件
+                    RemoveObjectArgs removeObjectArgs = RemoveObjectArgs.builder()
+                            .bucket(bucket)
+                            .object(origFilePath)
+                            .build();
+                    minioClient.removeObject(removeObjectArgs);
 
-                    //保存视频处理后的数据到数据库
+
+                    //6.保存视频处理后的数据到数据库,并移入到历史表
                     mediaProcessService.saveProcessFinishStatus(mediaProcess.getId(), "2", fileId, minioPath, "success");
+
+                    //7.更新media_file的url,改为mp4的路径
+                    //先查询该文件信息
+                    MediaFiles mediaFiles = mediaFileService.selectById(fileId);
+                    String filename = mediaFiles.getFilename();
+                    filename = filename.substring(0,filename.indexOf(".")) + ".mp4";
+
+                    mediaFiles.setId(fileId);
+                    mediaFiles.setFilename(filename);
+                    mediaFiles.setFilePath(minioPath);
+                    mediaFiles.setUrl("/" + bucket + "/" + minioPath);
+                    mediaFiles.setChangeDate(LocalDateTime.now());
+                    mediaFiles.setFileSize(mp4File.length());
+                    mediaFileService.updateFileURL(mediaFiles);
+
                 } catch (Exception e) {
 
                 } finally {

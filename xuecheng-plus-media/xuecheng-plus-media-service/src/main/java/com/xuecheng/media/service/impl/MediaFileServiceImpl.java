@@ -161,8 +161,14 @@ public class MediaFileServiceImpl implements MediaFileService {
     public MediaFiles addMediaFilesToDb(Long companyId, String fileMd5, UploadFileParamsDto uploadFileParamsDto, String bucket, String objectName) {
         //从数据库中查询文件
         MediaFiles mediaFiles = mediaFilesMapper.selectById(fileMd5);
+
         //文件已存在就不操作数据库
-        if (mediaFiles != null) return mediaFiles;
+        if (mediaFiles != null){
+            //如果是视频文件的话就需要考虑视频转码,所以需要考虑视频文件保存到媒资的待处理任务表(media_process)中
+            addWaitingTask(mediaFiles);
+            log.debug("保存到待处理文件表成功:{}",mediaFiles);
+            return mediaFiles;
+        }
         //拷贝基本信息
         mediaFiles = new MediaFiles();
         BeanUtils.copyProperties(uploadFileParamsDto, mediaFiles);
@@ -183,9 +189,6 @@ public class MediaFileServiceImpl implements MediaFileService {
         }
         log.error("保存文件到数据库成功,{}", mediaFiles);
 
-        //如果是视频文件的话就需要考虑视频转码,所以需要考虑视频文件保存到媒资的待处理任务表(media_process)中
-        addWaitingTask(mediaFiles);
-        log.debug("保存到待处理文件表成功:{}",mediaFiles);
         return mediaFiles;
 
     }
@@ -397,6 +400,16 @@ public class MediaFileServiceImpl implements MediaFileService {
         String secPath = fileMd5.substring(1, 2) + "/";
 
         return firstPath + secPath + fileMd5 + "/" + fileMd5 + fileExt;
+    }
+
+    @Override
+    public int updateFileURL(MediaFiles mediaFiles) {
+        return mediaFilesMapper.updateById(mediaFiles);
+    }
+
+    @Override
+    public MediaFiles selectById(String fileId) {
+        return mediaFilesMapper.selectById(fileId);
     }
 
     // 删除有bug,在断点续传后删除时总是卡住,总是在关闭springboot服务器时才真正删除(把能关闭的流都关闭了,不然有各种各样的bug)
