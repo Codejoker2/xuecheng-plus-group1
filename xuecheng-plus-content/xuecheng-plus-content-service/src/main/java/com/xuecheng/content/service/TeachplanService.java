@@ -1,5 +1,6 @@
 package com.xuecheng.content.service;
 
+import com.xuecheng.content.model.dto.BindTeachplanMediaDto;
 import com.xuecheng.content.model.dto.SaveTeachplanDto;
 import com.xuecheng.content.model.dto.TeachplanDto;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,4 +22,8 @@ public interface TeachplanService {
     public void movedown(Long id);
 
     public void moveup(Long id);
+
+    public void associationMedia(BindTeachplanMediaDto dto);
+
+    public void delAssociationMedia(String teachPlanId,String mediaId);
 }

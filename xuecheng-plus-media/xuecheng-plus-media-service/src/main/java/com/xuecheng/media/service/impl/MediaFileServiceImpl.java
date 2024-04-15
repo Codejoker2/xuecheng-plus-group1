@@ -22,6 +22,7 @@ import io.minio.messages.DeleteObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -71,6 +72,19 @@ public class MediaFileServiceImpl implements MediaFileService {
 
         //构建查询条件对象
         LambdaQueryWrapper<MediaFiles> queryWrapper = new LambdaQueryWrapper<>();
+        String fileType = queryMediaParamsDto.getFileType();
+        String filename = queryMediaParamsDto.getFilename();
+        String auditStatus = queryMediaParamsDto.getAuditStatus();
+        //模糊查询
+        if(!StringUtils.isBlank(fileType)){
+            queryWrapper.eq(MediaFiles::getFileType,fileType);
+        }
+        if(!StringUtils.isBlank(filename)){
+            queryWrapper.like(MediaFiles::getFilename,filename);
+        }
+        if(!StringUtils.isBlank(auditStatus)){
+            queryWrapper.eq(MediaFiles::getAuditStatus,auditStatus);
+        }
 
         //分页对象
         Page<MediaFiles> page = new Page<>(pageParams.getPageNo(), pageParams.getPageSize());
