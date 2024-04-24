@@ -454,6 +454,11 @@ public class MediaFileServiceImpl implements MediaFileService {
         return mediaFilesMapper.deleteBatchIds(ids);
     }
 
+    @Override
+    public MediaFiles getMediaFileById(String mediaId) {
+        return mediaFilesMapper.selectById(mediaId);
+    }
+
     // 删除有bug,在断点续传后删除时总是卡住,总是在关闭springboot服务器时才真正删除(把能关闭的流都关闭了,不然有各种各样的bug)
     private void delChunkFiles(String fileMd5, int chunkTotal) {
 

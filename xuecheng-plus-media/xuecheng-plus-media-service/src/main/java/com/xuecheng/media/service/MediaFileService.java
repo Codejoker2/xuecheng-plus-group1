@@ -133,4 +133,6 @@ public interface MediaFileService {
     List<MediaFiles> unUploadCompleteChunk();
 
     int delUnUploadComplete(List<MediaFiles> mediaFiles);
+
+    MediaFiles getMediaFileById(String mediaId);
 }
