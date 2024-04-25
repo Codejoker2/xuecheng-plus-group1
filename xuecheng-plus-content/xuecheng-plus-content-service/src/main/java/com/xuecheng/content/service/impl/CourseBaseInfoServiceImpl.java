@@ -1,17 +1,16 @@
 package com.xuecheng.content.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuecheng.content.mapper.*;
-import com.xuecheng.content.model.dto.AddCourseDto;
-import com.xuecheng.content.model.dto.CourseBaseInfoDto;
-import com.xuecheng.content.model.dto.EditCourseDto;
-import com.xuecheng.content.model.dto.QueryCourseParamsDto;
+import com.xuecheng.content.model.dto.*;
 import com.xuecheng.content.model.po.*;
 import com.xuecheng.content.service.CourseBaseInfoService;
 import com.xuecheng.base.exception.XuechengPlusException;
 import com.xuecheng.base.model.PageParams;
 import com.xuecheng.base.model.PageResult;
+import com.xuecheng.content.service.TeachplanService;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -19,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author zengweichuan
@@ -45,6 +45,12 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
 
     @Resource
     private TeachplanMediaMapper teachplanMediaMapper;
+
+    @Resource
+    private TeachplanService teachplanService;
+
+    @Resource
+    private CoursePublishPreMapper coursePublishPreMapper;
 
     @Override
     public PageResult<CourseBase> queryCourseBaseList(PageParams pageParams, QueryCourseParamsDto queryCourseParamsDto) {
@@ -155,6 +161,57 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
         teachplanMediaMapper.delete(new LambdaQueryWrapper<TeachplanMedia>().eq(TeachplanMedia::getCourseId,courseId));
         //删除课程教师信息
         courseTeacherMapper.delete(new LambdaQueryWrapper<CourseTeacher>().eq(CourseTeacher::getCourseId,courseId));
+    }
+
+    @Transactional
+    @Override
+    public void auditCommit(Long companyId, Long courseId) {
+        //约束校验
+        //获取课程
+        CourseBaseInfoDto courseBase = this.getCourseBaseById(courseId);
+        //课程审核状态
+        String auditStatus = courseBase.getAuditStatus();
+        //当前审核状态为已提交不允许再次提交
+        if(auditStatus.equals("202003")){
+            XuechengPlusException.cast("当前审核状态为已提交不允许再次提交");
+        }
+        //本机构只允许提交本机构的课程
+        if(!courseBase.getCompanyId().equals(companyId)){
+            XuechengPlusException.cast("本机构只允许提交本机构的课程,不允许提交其他机构的课程");
+        }
+        //课程图片是否填写
+        if(StringUtils.isEmpty(courseBase.getPic())){
+            XuechengPlusException.cast("提交失败，请上传课程图片");
+        }
+
+
+        //课程计划信息
+        List<TeachplanDto> teachplans =teachplanService.getTreeNodes(courseId);
+        //课程营销信息
+        CourseMarket courseMarket = courseMarketMapper.selectById(courseId);
+
+        CoursePublishPre coursePublishPreNew = new CoursePublishPre();
+        BeanUtils.copyProperties(courseBase,coursePublishPreNew);
+        coursePublishPreNew.setMarket(JSON.toJSONString(courseMarket));
+        coursePublishPreNew.setTeachplan(JSON.toJSONString(teachplans));
+        coursePublishPreNew.setCreateDate(LocalDateTime.now());
+        //设置预发布记录状态,已提交
+        coursePublishPreNew.setStatus("202003");
+        //查询课程预发布表是否存在该课程,存在则修改,不存在则插入
+        CoursePublishPre coursePublishPreFromDB = coursePublishPreMapper.selectById(courseId);
+        if(coursePublishPreFromDB != null){
+            coursePublishPreMapper.updateById(coursePublishPreNew);
+        }else{
+            coursePublishPreMapper.insert(coursePublishPreNew);
+        }
+        //修改课程表的审核字段未已提交
+        CourseBase courseBaseNew = new CourseBase();
+        courseBaseNew.setId(courseId);
+        courseBaseNew.setAuditStatus("202003");
+
+        courseBaseMapper.updateById(courseBaseNew);
+
+
     }
 
     //插入课程基本信息表

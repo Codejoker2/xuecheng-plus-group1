@@ -24,4 +24,11 @@ public interface CourseBaseInfoService {
     CourseBaseInfoDto updateCourseBase(Long companyId,EditCourseDto editCourseDto);
 
     void delCourseBase(Long courseId);
+
+    /**
+     * 提交审核接口
+     * @param companyId 机构id
+     * @param courseId 课程id
+     */
+    void auditCommit(Long companyId,Long courseId);
 }

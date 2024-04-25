@@ -22,29 +22,28 @@ import javax.annotation.Resource;
  */
 @Api(value = "课程信息编辑接口",tags = "课程信息编辑接口")
 @RestController
-@RequestMapping("/course")
 public class CourseBaseInfoController {
 
     @Resource
     private CourseBaseInfoService courseBaseInfoService;
-    @PostMapping("/list")
+    @PostMapping("/course/list")
     public PageResult<CourseBase> list(PageParams pageParams, @RequestBody(required = false) QueryCourseParamsDto queryCourseParamsDto){
         PageResult<CourseBase> courseBasePageResult = courseBaseInfoService.queryCourseBaseList(pageParams, queryCourseParamsDto);
         return courseBasePageResult;
     }
 
-    @PostMapping
+    @PostMapping("/course")
     public CourseBaseInfoDto createCourseBase(@RequestBody @Validated(ValidationGroups.Inster.class) AddCourseDto addCourseDto){
         CourseBaseInfoDto courseBase = courseBaseInfoService.createCourseBase(addCourseDto);
         return courseBase;
     }
 
-    @GetMapping("{courseId}")
+    @GetMapping("/course/{courseId}")
     public CourseBaseInfoDto getCourseBaseById(@PathVariable Long courseId){
         return courseBaseInfoService.getCourseBaseById(courseId);
     }
 
-    @PutMapping
+    @PutMapping("/course")
     public CourseBaseInfoDto updateCourseBase(@RequestBody @Validated(ValidationGroups.Update.class)EditCourseDto editCourseDto){
         //机构id，由于认证系统没有上线暂时硬编码
         Long companyId = 1232141425L;
@@ -52,9 +51,19 @@ public class CourseBaseInfoController {
         return courseBaseInfoService.updateCourseBase(companyId,editCourseDto);
     }
 
-    @DeleteMapping("{courseId}")
+    @DeleteMapping("/course/{courseId}")
     public void delCourseBase(@PathVariable Long courseId){
         courseBaseInfoService.delCourseBase(courseId);
     }
 
+    /**
+     * 提交课程审核
+     * @param courseId
+     */
+    @PostMapping("/courseaudit/commit/{courseId}")
+    public void auditCommit(@PathVariable Long courseId){
+        //机构id，由于认证系统没有上线暂时硬编码
+        Long companyId = 1232141425L;
+        courseBaseInfoService.auditCommit(companyId,courseId);
+    }
 }
