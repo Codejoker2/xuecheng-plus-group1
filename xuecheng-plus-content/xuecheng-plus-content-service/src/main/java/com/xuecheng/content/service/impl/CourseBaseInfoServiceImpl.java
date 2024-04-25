@@ -52,6 +52,12 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
     @Resource
     private CoursePublishPreMapper coursePublishPreMapper;
 
+    @Resource
+    private CoursePublishMapper coursePublishMapper;
+
+    @Resource
+    private MqMessageMapper mqMessageMapper;
+
     @Override
     public PageResult<CourseBase> queryCourseBaseList(PageParams pageParams, QueryCourseParamsDto queryCourseParamsDto) {
 
@@ -212,6 +218,56 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
         courseBaseMapper.updateById(courseBaseNew);
 
 
+    }
+
+    @Transactional
+    @Override
+    public void coursePublish(Long companyId, Long courseId) {
+        //约束校验
+        //查询课程预发布表
+        CoursePublishPre coursePublishPre = coursePublishPreMapper.selectById(courseId);
+        if(coursePublishPre == null){
+            XuechengPlusException.cast("请先提交课程审核，审核通过才可以发布");
+        }
+        //本机构只允许提交本机构的课程
+        if(!coursePublishPre.getCompanyId().equals(companyId)){
+            XuechengPlusException.cast("不允许提交其它机构的课程。");
+        }
+        //课程审核状态,审核通过才能发布
+        String status = coursePublishPre.getStatus();
+        if(!status.equals("202004")){
+            XuechengPlusException.cast("审核通过才能发布哦!");
+        }
+        //保存课程发布信息
+        saveCoursePublish(courseId);
+        //Todo 向mq_message消息表插入一条消息，消息类型为：course_publish
+
+        //删除课程预发布表的对应记录。
+        coursePublishPreMapper.deleteById(courseId);
+    }
+
+    /**
+     * 保存信息到课程发布表,并更新课程基本信息表,删除对应的课程预发布对应的记录
+     * @param courseId 课程id
+     */
+    private void saveCoursePublish(Long courseId){
+        //1、向课程发布表course_publish插入一条记录,记录来源于课程预发布表，如果存在则更新，发布状态为：已发布。
+        CoursePublishPre coursePublishPre = coursePublishPreMapper.selectById(courseId);
+        CoursePublish coursePublishNew = new CoursePublish();
+        BeanUtils.copyProperties(coursePublishPre,coursePublishNew);
+
+        CoursePublish coursePublishFromDb = coursePublishMapper.selectById(courseId);
+        if(coursePublishFromDb == null){
+            coursePublishMapper.insert(coursePublishNew);
+        }else{
+            coursePublishMapper.updateById(coursePublishNew);
+        }
+
+        //2、更新course_base表的课程发布状态为：已发布
+        CourseBase courseBase = new CourseBase();
+        courseBase.setId(courseId);
+        courseBase.setStatus("203002");
+        courseBaseMapper.updateById(courseBase);
     }
 
     //插入课程基本信息表

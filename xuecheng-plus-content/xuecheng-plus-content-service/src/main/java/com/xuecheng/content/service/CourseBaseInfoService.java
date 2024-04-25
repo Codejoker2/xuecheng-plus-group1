@@ -31,4 +31,11 @@ public interface CourseBaseInfoService {
      * @param courseId 课程id
      */
     void auditCommit(Long companyId,Long courseId);
+
+    /**
+     * 发布课程接口
+     * @param companyId 机构id
+     * @param courseId 课程id
+     */
+    void coursePublish(Long companyId,Long courseId);
 }
