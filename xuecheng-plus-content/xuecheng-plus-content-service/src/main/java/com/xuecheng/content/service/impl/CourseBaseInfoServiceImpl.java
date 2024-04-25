@@ -3,6 +3,7 @@ package com.xuecheng.content.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xuecheng.base.exception.CommonError;
 import com.xuecheng.content.mapper.*;
 import com.xuecheng.content.model.dto.*;
 import com.xuecheng.content.model.po.*;
@@ -11,6 +12,8 @@ import com.xuecheng.base.exception.XuechengPlusException;
 import com.xuecheng.base.model.PageParams;
 import com.xuecheng.base.model.PageResult;
 import com.xuecheng.content.service.TeachplanService;
+import com.xuecheng.messagesdk.model.po.MqMessage;
+import com.xuecheng.messagesdk.service.MqMessageService;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -56,7 +59,7 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
     private CoursePublishMapper coursePublishMapper;
 
     @Resource
-    private MqMessageMapper mqMessageMapper;
+    private MqMessageService mqMessageService;
 
     @Override
     public PageResult<CourseBase> queryCourseBaseList(PageParams pageParams, QueryCourseParamsDto queryCourseParamsDto) {
@@ -214,6 +217,7 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
         CourseBase courseBaseNew = new CourseBase();
         courseBaseNew.setId(courseId);
         courseBaseNew.setAuditStatus("202003");
+        courseBaseNew.setStatus("203001");
 
         courseBaseMapper.updateById(courseBaseNew);
 
@@ -240,10 +244,24 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
         }
         //保存课程发布信息
         saveCoursePublish(courseId);
-        //Todo 向mq_message消息表插入一条消息，消息类型为：course_publish
+        // 向mq_message消息表插入一条消息，消息类型为：course_publish
+        saveCoursePublishMessage(courseId);
 
         //删除课程预发布表的对应记录。
         coursePublishPreMapper.deleteById(courseId);
+    }
+
+    private void saveCoursePublishMessage(Long courseId) {
+        //MqMessage mqMessage = mqMessageService.addMessage("course_publish", String.valueOf(courseId), null, null);
+        MqMessage mqMessage = mqMessageService
+                .addMessage("course_publish",
+                        String.valueOf(courseId),
+                        null,
+                        null);
+
+        if(mqMessage==null){
+            XuechengPlusException.cast(CommonError.UNKOWN_ERROR);
+        }
     }
 
     /**
