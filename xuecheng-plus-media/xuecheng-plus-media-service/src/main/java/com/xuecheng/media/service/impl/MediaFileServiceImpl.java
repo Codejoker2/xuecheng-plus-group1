@@ -34,6 +34,7 @@ import javax.annotation.Resource;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -149,7 +150,7 @@ public class MediaFileServiceImpl implements MediaFileService {
 
     //文件默认路径设置
     private String getDefaultPath() {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         String folder = format.format(new Date()).replace("-", "/") + "/";
         return folder;
     }
@@ -197,8 +198,8 @@ public class MediaFileServiceImpl implements MediaFileService {
         mediaFiles.setAuditStatus("002003");
         mediaFiles.setStatus("1");
         mediaFiles.setUploadStatus("2");
-
-        int update = mediaFilesMapper.updateById(mediaFiles);
+        //保存文件信息到数据库
+        int update = mediaFilesMapper.insert(mediaFiles);
         if (update <= 0) {
             log.error("保存文件到数据库失败,{}", mediaFiles);
             throw new XuechengPlusException("保存文件信息失败!");
@@ -231,7 +232,7 @@ public class MediaFileServiceImpl implements MediaFileService {
     }
 
     @Override
-    public UploadFileResultDto uploadCourseFile(Long companyId, UploadFileParamsDto uploadFileParamsDto, String localFilePath) {
+    public UploadFileResultDto uploadCourseFile(Long companyId, UploadFileParamsDto uploadFileParamsDto, String localFilePath,String objectName) {
         File file = new File(localFilePath);
         if (!file.exists()) throw new XuechengPlusException("文件不存在!");
 
@@ -245,8 +246,14 @@ public class MediaFileServiceImpl implements MediaFileService {
         String md5 = getFileMD5(file);
         //文件默认目录
         String folder = getDefaultPath();
+        /*
+        如果传过来文件路径objectName，就使用提供的文件目录，如果objectName为null,就使用默认生成的文件目录
+         */
+        if(StringUtils.isEmpty(objectName)){
+            objectName = folder + md5 + extension;
+        }
         //存储到minio中的对象名(带目录)
-        String objectName = folder + md5 + extension;
+        //objectName = folder + md5 + extension;
         //将文件上传到minio
         addMediaFilesToMinIO(bucketFiles, mimeType, objectName, localFilePath);
         //文件大小设置

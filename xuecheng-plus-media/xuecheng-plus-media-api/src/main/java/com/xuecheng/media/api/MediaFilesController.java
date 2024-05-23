@@ -13,10 +13,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -47,7 +44,8 @@ public class MediaFilesController {
  }
 
  @PostMapping(value = "/upload/coursefile",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
- public UploadFileResultDto uploadCourseFile(@RequestPart("filedata")MultipartFile filedata) {
+ public UploadFileResultDto uploadCourseFile(@RequestPart("filedata") MultipartFile filedata,
+                                             @RequestParam(value = "objectName", required = false) String objectName) {
 
      Long companyId = 12323123L;
 
@@ -72,7 +70,7 @@ public class MediaFilesController {
          log.error("在上传图片时创建临时文件失败!,失败信息:{}",e.getMessage(),e);
          throw new XuechengPlusException("上传图片时出现错误,请重试!");
      }
-     UploadFileResultDto uploadFileResultDto = mediaFileService.uploadCourseFile(companyId, dto, absolutePath);
+     UploadFileResultDto uploadFileResultDto = mediaFileService.uploadCourseFile(companyId, dto, absolutePath,objectName);
 
 
      return uploadFileResultDto;
