@@ -251,6 +251,21 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
         coursePublishPreMapper.deleteById(courseId);
     }
 
+    @Transactional
+    @Override
+    public void auditPassCourse(Long companyId, Long courseId) {
+        CoursePublishPre coursePublishPre = new CoursePublishPre();
+        coursePublishPre.setStatus("202004");
+        coursePublishPre.setId(courseId);
+
+        CourseBase courseBase = new CourseBase();
+        courseBase.setAuditStatus("202004");
+        courseBase.setId(courseId);
+
+        courseBaseMapper.updateById(courseBase);
+        coursePublishPreMapper.updateById(coursePublishPre);
+    }
+
     private void saveCoursePublishMessage(Long courseId) {
         //MqMessage mqMessage = mqMessageService.addMessage("course_publish", String.valueOf(courseId), null, null);
         MqMessage mqMessage = mqMessageService

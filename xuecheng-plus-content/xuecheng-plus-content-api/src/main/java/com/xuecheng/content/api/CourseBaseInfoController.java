@@ -66,6 +66,18 @@ public class CourseBaseInfoController {
         Long companyId = 1232141425L;
         courseBaseInfoService.auditCommit(companyId,courseId);
     }
+    /**
+     * 由于没有审核的具体功能
+     * 手动审核通过
+     * @param courseId
+     */
+    @PostMapping("/courseaudit/pass/{courseId}")
+    public void auditPassCourse(@PathVariable Long courseId){
+        //机构id，由于认证系统没有上线暂时硬编码
+        Long companyId = 1232141425L;
+        //courseBaseInfoService.auditCommit(companyId,courseId);
+        courseBaseInfoService.auditPassCourse(companyId,courseId);
+    }
 
     @PostMapping("/coursepublish/{courseId}")
     public void coursePublish(@PathVariable Long courseId){
