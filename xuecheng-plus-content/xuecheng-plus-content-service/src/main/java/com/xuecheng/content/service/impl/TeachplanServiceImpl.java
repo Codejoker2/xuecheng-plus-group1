@@ -94,6 +94,15 @@ public class TeachplanServiceImpl implements TeachplanService {
     @Override
     public void movedown(Long id) {
         Teachplan currentPlan = teachplanMapper.selectById(id);
+        //如果已经是最后一个了，就不要向下移动了
+        //计数同层次的个数是否与orderby相等，相等就是最后一个
+        Integer num = teachplanMapper
+                .selectCount(new LambdaQueryWrapper<Teachplan>()
+                .eq(Teachplan::getCourseId, currentPlan.getCourseId())
+                .eq(Teachplan::getParentid, currentPlan.getParentid()));
+        if(num.equals(currentPlan.getOrderby())){
+            throw new XuechengPlusException("如果已经是最后一个了，就不要向下移动了");
+        }
         //查询他的下一节
         Teachplan downPlan = teachplanMapper.selectOne(new LambdaQueryWrapper<Teachplan>()
                 .eq(Teachplan::getCourseId, currentPlan.getCourseId())
@@ -157,6 +166,10 @@ public class TeachplanServiceImpl implements TeachplanService {
     @Override
     public void moveup(Long id) {
         Teachplan currentPlan = teachplanMapper.selectById(id);
+        //如果本来就是第一个就不要移动了
+        if(currentPlan.getOrderby().equals(1)){
+            throw new XuechengPlusException("已经是第一个了，不能再往上移动了！");
+        }
         //查询他的下一节
         Teachplan upPlan = teachplanMapper.selectOne(new LambdaQueryWrapper<Teachplan>()
                 .eq(Teachplan::getCourseId, currentPlan.getCourseId())
