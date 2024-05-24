@@ -1,5 +1,6 @@
 package com.xuecheng.content.jobhandler;
 
+import com.xuecheng.content.service.CoursePublishService;
 import com.xuecheng.messagesdk.model.po.MqMessage;
 import com.xuecheng.messagesdk.service.MessageProcessAbstract;
 import com.xuecheng.messagesdk.service.MqMessageService;
@@ -9,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -22,6 +24,9 @@ public class CoursePublishTask extends MessageProcessAbstract {
 
     @Resource
     private MqMessageService mqMessageService;
+
+    @Resource
+    private CoursePublishService coursePublishService;
     //任务调度入口
     @XxlJob("CoursePublishJobHandler")
     public void coursePublishJobHandler(){
@@ -48,29 +53,28 @@ public class CoursePublishTask extends MessageProcessAbstract {
         return true;
     }
 
-    private void saveCourseCache(MqMessage mqMessage, String courseId) {
+    private void generateCourseHtml(MqMessage mqMessage, String courseId) {
 
-        log.debug("开始进行课程静态化,课程id:{}",courseId);
+        log.debug("开始进行课程静态化,课程id:{}", courseId);
         //消息id
         Long id = mqMessage.getId();
         //消息处理的service
         MqMessageService mqMessageService = this.getMqMessageService();
         //消息幂等性处理
         int stageOne = mqMessageService.getStageOne(id);
-        if(stageOne >0){
-            log.debug("课程静态化已处理直接返回，课程id:{}",courseId);
-            return ;
+        if (stageOne > 0) {
+            log.debug("课程静态化已处理直接返回，课程id:{}", courseId);
+            return;
         }
-        try {
-            TimeUnit.SECONDS.sleep(10);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        File file  = coursePublishService.generateCourseHtml(Long.parseLong(courseId));
+        if (file != null) {
+                coursePublishService.uploadCourseHtml(Long.parseLong(courseId), file);
+            }
         //保存第一阶段状态
         mqMessageService.completedStageOne(id);
     }
 
-    private void generateCourseHtml(MqMessage mqMessage, String courseId) {
+    private void saveCourseCache(MqMessage mqMessage, String courseId) {
         log.debug("将课程信息缓存至redis,课程id:{}",courseId);
         try {
             TimeUnit.SECONDS.sleep(2);
