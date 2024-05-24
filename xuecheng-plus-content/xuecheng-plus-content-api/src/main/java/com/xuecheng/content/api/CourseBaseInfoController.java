@@ -79,10 +79,4 @@ public class CourseBaseInfoController {
         courseBaseInfoService.auditPassCourse(companyId,courseId);
     }
 
-    @PostMapping("/coursepublish/{courseId}")
-    public void coursePublish(@PathVariable Long courseId){
-        //机构id，由于认证系统没有上线暂时硬编码
-        Long companyId = 1232141425L;
-        courseBaseInfoService.coursePublish(companyId,courseId);
-    }
 }

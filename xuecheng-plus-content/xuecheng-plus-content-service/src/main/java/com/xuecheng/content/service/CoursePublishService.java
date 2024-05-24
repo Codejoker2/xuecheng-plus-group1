@@ -16,4 +16,11 @@ public interface CoursePublishService {
      * @date 2022/9/16 15:36
      */
     public CoursePreviewDto getCoursePreviewInfo(Long courseId);
+
+    /**
+     * 发布课程接口
+     * @param companyId 机构id
+     * @param courseId 课程id
+     */
+    void coursePublish(Long companyId,Long courseId);
 }
