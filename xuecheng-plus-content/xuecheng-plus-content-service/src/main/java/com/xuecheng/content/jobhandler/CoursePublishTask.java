@@ -1,5 +1,11 @@
 package com.xuecheng.content.jobhandler;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.xuecheng.base.exception.XuechengPlusException;
+import com.xuecheng.content.feignclient.SearchServiceClient;
+import com.xuecheng.content.mapper.CoursePublishMapper;
+import com.xuecheng.content.model.dto.CourseIndex;
+import com.xuecheng.content.model.po.CoursePublish;
 import com.xuecheng.content.service.CoursePublishService;
 import com.xuecheng.messagesdk.model.po.MqMessage;
 import com.xuecheng.messagesdk.service.MessageProcessAbstract;
@@ -7,6 +13,7 @@ import com.xuecheng.messagesdk.service.MqMessageService;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -27,6 +34,13 @@ public class CoursePublishTask extends MessageProcessAbstract {
 
     @Resource
     private CoursePublishService coursePublishService;
+
+    @Resource
+    private CoursePublishMapper coursePublishMapper;
+
+    @Resource
+    private SearchServiceClient searchServiceClient;
+
     //任务调度入口
     @XxlJob("CoursePublishJobHandler")
     public void coursePublishJobHandler(){
@@ -83,12 +97,29 @@ public class CoursePublishTask extends MessageProcessAbstract {
         }
     }
 
-    private void saveCourseIndex(MqMessage mqMessage, String courseId) {
-        log.debug("保存课程索引信息,课程id:{}",courseId);
-        try {
-            TimeUnit.SECONDS.sleep(2);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+    //使用xxl-job同步es和mysql的数据
+    private void  saveCourseIndex(MqMessage mqMessage, String courseId) {
+        //消息id
+        Long id = mqMessage.getId();
+        //消息处理的service
+        MqMessageService mqMessageService = this.getMqMessageService();
+        //消息幂等性处理
+        int stageTwo = mqMessageService.getStageTwo(id);
+        if (stageTwo > 0) {
+            log.debug("课程同步es已处理直接返回，课程id:{}", courseId);
+            return;
         }
+        log.debug("保存课程索引信息,课程id:{}",courseId);
+        //查询
+        CoursePublish coursePublish = coursePublishMapper.selectById(courseId);
+
+        CourseIndex courseIndex = new CourseIndex();
+        BeanUtils.copyProperties(coursePublish,courseIndex);
+
+        Boolean add = searchServiceClient.add(courseIndex);
+        //出现异常，抛出异常信息
+        if (!add)throw new XuechengPlusException("远程调用保存课程索引信息,课程id:{}",courseId);
+        //添加es成功，保存步骤信息，保证消息幂等性
+        mqMessageService.completedStageTwo(id);
     }
 }
