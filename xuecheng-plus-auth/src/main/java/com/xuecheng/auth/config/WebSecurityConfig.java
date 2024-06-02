@@ -1,5 +1,6 @@
 package com.xuecheng.auth.config;
 
+import com.xuecheng.ucenter.service.impl.UserServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -25,20 +26,22 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 
     //配置用户信息服务
+    //自定义实现数据库验证
     @Bean
     public UserDetailsService userDetailsService() {
         //这里配置用户信息,这里暂时使用这种方式将用户存储在内存中
-        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-        manager.createUser(User.withUsername("zhangsan").password("123").authorities("p1").build());
-        manager.createUser(User.withUsername("lisi").password("456").authorities("p2").build());
-        return manager;
+//        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+//        manager.createUser(User.withUsername("zhangsan").password("123").authorities("p1").build());
+//        manager.createUser(User.withUsername("lisi").password("456").authorities("p2").build());
+//        return manager;
+        return new UserServiceImpl();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
 //        //密码为明文方式
-        return NoOpPasswordEncoder.getInstance();
-//        return new BCryptPasswordEncoder();
+//        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
 
     //配置安全拦截机制
