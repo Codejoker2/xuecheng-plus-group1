@@ -1,6 +1,7 @@
 package com.xuecheng.ucenter.service.impl;
 
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xuecheng.ucenter.mapper.XcUserMapper;
 import com.xuecheng.ucenter.model.po.XcUser;
@@ -32,9 +33,13 @@ public class UserServiceImpl implements UserDetailsService {
 
         //Todo 设置用户权限信息,现在设置硬编码
         String[] authorities = {"test"};
+        //将整个user的信息转换成json的形式替换原有username的位置
+        //清除密码信息
+        user.setPassword(null);
+        String userJson = JSON.toJSONString(user);
 
         //创建UserDetails对象，权限信息待实现授权功能再向UserDetail中加入
-        UserDetails userDetails = User.withUsername(user.getUsername())
+        UserDetails userDetails = User.withUsername(userJson)
                 .password(password)
                 .authorities(authorities)
                 .build();
