@@ -2,48 +2,79 @@ package com.xuecheng.ucenter.service.impl;
 
 
 import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xuecheng.ucenter.mapper.XcUserMapper;
-import com.xuecheng.ucenter.model.po.XcUser;
+import com.xuecheng.ucenter.model.dto.AuthParamsDto;
+import com.xuecheng.ucenter.model.dto.XcUserExt;
+import com.xuecheng.ucenter.service.AuthService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import javax.annotation.Resource;
+import java.util.List;
 
+@Slf4j
 public class UserServiceImpl implements UserDetailsService {
 
     @Resource
     private XcUserMapper userMapper;
 
+    @Resource
+    private ApplicationContext applicationContext;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        LambdaQueryWrapper<XcUser> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(XcUser::getUsername, username);
 
-        XcUser user = userMapper.selectOne(wrapper);
-
-        if (user == null) {
-            //返回空表示用户不存在
-            return null;
+        AuthParamsDto authParamsDto = null;
+        try {
+            authParamsDto = JSON.parseObject(username,AuthParamsDto.class);
+        } catch (Exception e) {
+            log.error("认证请求数据格式不正确：{}",username);
+            throw new RuntimeException("认证请求数据格式不正确！");
         }
-        //取出数据库存储的正确密码
-        String password = user.getPassword();
+        //使用策略模式来确认认证方法
+        String authType = authParamsDto.getAuthType();
+        //从spring容器中获取对象
+        AuthService authService = applicationContext
+                .getBean(authType + "_authservice", AuthService.class);
 
-        //Todo 设置用户权限信息,现在设置硬编码
-        String[] authorities = {"test"};
-        //将整个user的信息转换成json的形式替换原有username的位置
-        //清除密码信息
+        //开始认证,执行这个策略具体的认证方法
+        XcUserExt user = authService.execute(authParamsDto);
+
+        //获取认证授权后的用户信息
+        UserDetails userDetails = getUserPrincipal(user);
+
+        return userDetails;
+    }
+
+    /**
+     * @description 查询用户信息
+     * @param user  用户id，主键
+     * @return com.xuecheng.ucenter.model.po.XcUser 用户信息
+     * @author Mr.M
+     * @date 2022/9/29 12:19
+     */
+    public UserDetails getUserPrincipal(XcUserExt user){
+        String password = user.getPassword();
+        //去除密码信息
         user.setPassword(null);
         String userJson = JSON.toJSONString(user);
+        List<GrantedAuthority> authorities = user.getAuthorities();
+        //没有权限就创建一个
+        if (authorities.isEmpty()){
+            authorities.add(new SimpleGrantedAuthority("test"));
+        }
 
         //创建UserDetails对象，权限信息待实现授权功能再向UserDetail中加入
         UserDetails userDetails = User.withUsername(userJson)
                 .password(password)
                 .authorities(authorities)
                 .build();
-
         return userDetails;
     }
 }
