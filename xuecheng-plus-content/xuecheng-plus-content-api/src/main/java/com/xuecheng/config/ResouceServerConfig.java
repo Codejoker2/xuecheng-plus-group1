@@ -38,7 +38,7 @@ public class ResouceServerConfig extends ResourceServerConfigurerAdapter {
     public void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/r/**", "/course/**").authenticated()//所有/r/**的请求必须认证通过
+//                .antMatchers("/r/**", "/course/**").authenticated()//所有/r/**的请求必须认证通过(使用网关来校验是否令牌合法，就不需要这里来拦截了，不然工作就做重复了，放行所有请求即可)
                 .anyRequest().permitAll();
     }
 }
