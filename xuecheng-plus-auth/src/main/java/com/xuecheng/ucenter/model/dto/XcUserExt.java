@@ -19,18 +19,4 @@ public class XcUserExt extends XcUser {
     //用户权限
     List<String> permissions = new ArrayList<>();
 
-    //处理权限信息
-    List<GrantedAuthority> authorities = null;
-
-    public List<GrantedAuthority> getAuthorities(){
-        if (authorities != null) return authorities;
-
-        authorities = new ArrayList<>();
-        for (String permission : permissions) {
-            SimpleGrantedAuthority authority = new SimpleGrantedAuthority(permission);
-            authorities.add(authority);
-        }
-        return authorities;
-    }
-
 }

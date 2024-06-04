@@ -20,6 +20,8 @@ public class SecurityUtil {
 
     public static XcUser getUser() {
         try {
+            //根据Oauth2协议，授权服务器和资源服务器使用同一个token的密钥，
+            // 他们会自动解析成对应SecurityContextHolder上下文信息并保存下来
             Object principalObj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             if (principalObj instanceof String) {
                 //取出用户身份信息

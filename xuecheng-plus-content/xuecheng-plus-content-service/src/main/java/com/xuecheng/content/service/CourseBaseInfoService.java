@@ -15,7 +15,7 @@ import com.xuecheng.base.model.PageResult;
  */
 public interface CourseBaseInfoService {
 
-    PageResult<CourseBase> queryCourseBaseList(PageParams pageParams, QueryCourseParamsDto queryCourseParamsDto);
+    PageResult<CourseBase> queryCourseBaseList(Long companyId,PageParams pageParams, QueryCourseParamsDto queryCourseParamsDto);
 
     CourseBaseInfoDto createCourseBase(AddCourseDto addCourseDto);
 

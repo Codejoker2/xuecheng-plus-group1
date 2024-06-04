@@ -2,14 +2,14 @@ package com.xuecheng.ucenter.service.impl;
 
 
 import com.alibaba.fastjson.JSON;
+import com.xuecheng.ucenter.mapper.XcMenuMapper;
 import com.xuecheng.ucenter.mapper.XcUserMapper;
 import com.xuecheng.ucenter.model.dto.AuthParamsDto;
 import com.xuecheng.ucenter.model.dto.XcUserExt;
+import com.xuecheng.ucenter.model.po.XcMenu;
 import com.xuecheng.ucenter.service.AuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,6 +23,9 @@ public class UserServiceImpl implements UserDetailsService {
 
     @Resource
     private XcUserMapper userMapper;
+
+    @Resource
+    private XcMenuMapper menuMapper;
 
     @Resource
     private ApplicationContext applicationContext;
@@ -60,15 +63,29 @@ public class UserServiceImpl implements UserDetailsService {
      * @date 2022/9/29 12:19
      */
     public UserDetails getUserPrincipal(XcUserExt user){
+
+        //获取用户权限信息
+        List<XcMenu> xcMenus = menuMapper.selectPermissionByUserId(user.getId());
+        List<String> permissions = user.getPermissions();
+/*  普通方式
+        for (XcMenu xcMenu : xcMenus) {
+            String code = xcMenu.getCode();
+            user.getPermissions().add(code);
+        }*/
+        //使用lamda表达式
+        xcMenus.stream().forEach(xcMenu -> permissions.add(xcMenu.getCode()));
+
+        //没有权限就创建一个,不然会有异常
+        if (permissions.isEmpty()){
+            permissions.add("test");
+        }
+        //将权限code转换成字符串数组
+        String[] authorities =  permissions.toArray(new String[0]);
+
         String password = user.getPassword();
         //去除密码信息
         user.setPassword(null);
         String userJson = JSON.toJSONString(user);
-        List<GrantedAuthority> authorities = user.getAuthorities();
-        //没有权限就创建一个
-        if (authorities.isEmpty()){
-            authorities.add(new SimpleGrantedAuthority("test"));
-        }
 
         //创建UserDetails对象，权限信息待实现授权功能再向UserDetail中加入
         UserDetails userDetails = User.withUsername(userJson)
