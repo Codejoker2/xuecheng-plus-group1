@@ -1,4 +1,4 @@
-package com.xuecheng.checkcode.service.impl;
+package com.xuecheng.checkcode.service.impl.generator;
 
 import com.xuecheng.checkcode.model.CheckCodeParamsDto;
 import com.xuecheng.checkcode.service.CheckCodeService;

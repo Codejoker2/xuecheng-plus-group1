@@ -27,6 +27,9 @@ public class CheckCodeController {
     @Resource(name = "PicCheckCodeService")
     private CheckCodeService picCheckCodeService;
 
+    @Resource(name = "PhoneOrEmailCheckCodeService")
+    private CheckCodeService phoneOrEmailCheckCodeService;
+
 
     @ApiOperation(value="生成验证信息", notes="生成验证信息")
     @PostMapping(value = "/pic")
@@ -44,5 +47,11 @@ public class CheckCodeController {
     public Boolean verify(String key, String code){
         Boolean isSuccess = picCheckCodeService.verify(key,code);
         return isSuccess;
+    }
+
+    //在重置密码时，使用邮箱和手机号作为根据来
+    @PostMapping(value = "/phone")
+    public CheckCodeResultDto generatePhoneOrEmailCode (CheckCodeParamsDto checkCodeParamsDto){
+        return phoneOrEmailCheckCodeService.generate(checkCodeParamsDto);
     }
 }

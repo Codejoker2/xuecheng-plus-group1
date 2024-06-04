@@ -1,4 +1,4 @@
-package com.xuecheng.checkcode.service.impl;
+package com.xuecheng.checkcode.service.impl.sotre;
 
 import com.xuecheng.checkcode.service.CheckCodeService;
 import org.springframework.beans.factory.annotation.Autowired;

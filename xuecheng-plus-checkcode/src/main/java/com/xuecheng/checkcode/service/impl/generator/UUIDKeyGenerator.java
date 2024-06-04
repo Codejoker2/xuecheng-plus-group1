@@ -1,4 +1,4 @@
-package com.xuecheng.checkcode.service.impl;
+package com.xuecheng.checkcode.service.impl.generator;
 
 import com.xuecheng.checkcode.service.CheckCodeService;
 import org.springframework.stereotype.Component;
