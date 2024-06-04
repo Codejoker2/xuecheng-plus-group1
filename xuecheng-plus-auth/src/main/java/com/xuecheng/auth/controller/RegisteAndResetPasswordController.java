@@ -16,7 +16,12 @@ public class RegisteAndResetPasswordController {
     private RegisteAndResetPasswordService registeAndResetPasswordService;
 
     @PostMapping("/findpassword")
-    public void findpassword(@RequestBody RegistAndResetPassDto dto){
+    public void findpassword(@RequestBody RegistAndResetPassDto dto) {
         registeAndResetPasswordService.findpassword(dto);
+    }
+
+    @PostMapping("/register")
+    public void register(@RequestBody RegistAndResetPassDto dto){
+        registeAndResetPasswordService.register(dto);
     }
 }

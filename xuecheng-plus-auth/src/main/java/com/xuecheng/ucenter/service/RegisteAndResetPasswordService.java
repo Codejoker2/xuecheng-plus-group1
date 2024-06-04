@@ -5,4 +5,6 @@ import com.xuecheng.ucenter.model.dto.RegistAndResetPassDto;
 public interface RegisteAndResetPasswordService {
 
     public void findpassword( RegistAndResetPassDto dto);
+
+    void register(RegistAndResetPassDto dto);
 }
