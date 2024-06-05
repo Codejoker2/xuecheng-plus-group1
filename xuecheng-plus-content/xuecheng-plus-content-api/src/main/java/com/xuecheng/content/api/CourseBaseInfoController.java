@@ -29,7 +29,7 @@ public class CourseBaseInfoController {
     @Resource
     private CourseBaseInfoService courseBaseInfoService;
     @PostMapping("/course/list")
-    @PreAuthorize("hasAuthority('xc_teachmanager_course_list ')")
+    @PreAuthorize("hasAuthority('xc_teachmanager_course_list')")
     public PageResult<CourseBase> list(PageParams pageParams, @RequestBody(required = false) QueryCourseParamsDto queryCourseParamsDto){
         SecurityUtil.XcUser user = SecurityUtil.getUser();
         String companyId = user.getCompanyId();

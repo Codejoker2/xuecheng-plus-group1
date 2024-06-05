@@ -133,7 +133,7 @@ public class TeachplanServiceImpl implements TeachplanService {
         }
 
         LambdaQueryWrapper<TeachplanMedia> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TeachplanMedia::getMediaId,dto.getMediaId());
+        wrapper.eq(TeachplanMedia::getTeachplanId,dto.getTeachplanId());
         TeachplanMedia teachplanMedia = teachplanMediaMapper.selectOne(wrapper);
         //删除原有的绑定关系
         if(teachplanMedia != null){
