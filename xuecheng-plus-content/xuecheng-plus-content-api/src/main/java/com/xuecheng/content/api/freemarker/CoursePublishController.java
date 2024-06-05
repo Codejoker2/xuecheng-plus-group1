@@ -1,6 +1,7 @@
 package com.xuecheng.content.api.freemarker;
 
 import com.xuecheng.content.model.dto.CoursePreviewDto;
+import com.xuecheng.content.model.po.CoursePublish;
 import com.xuecheng.content.service.CoursePublishService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,5 +42,12 @@ public class CoursePublishController {
         //机构id，由于认证系统没有上线暂时硬编码
         Long companyId = 1232141425L;
         coursePublishService.coursePublish(companyId,courseId);
+    }
+
+    //查询课程发布信息
+    @ResponseBody
+    @GetMapping("/r/coursepublish/{courseId}")
+    public CoursePublish getCoursepublish(@PathVariable("courseId") Long courseId) {
+        return coursePublishService.getCoursePublish(courseId);
     }
 }
