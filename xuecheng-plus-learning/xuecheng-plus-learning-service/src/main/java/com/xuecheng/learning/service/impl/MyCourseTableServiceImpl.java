@@ -116,7 +116,7 @@ public class MyCourseTableServiceImpl implements MyCourseTablesService {
     }
 
     private XcChooseCourse addChargeCourse(String userId, CoursePublish coursePublish) {
-        //如果存在待支付交易纪律直接返回
+        //如果存在待支付交易记录直接返回
         LambdaQueryWrapper<XcChooseCourse> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(XcChooseCourse::getUserId, userId)
                 .eq(XcChooseCourse::getCourseId, coursePublish.getId())

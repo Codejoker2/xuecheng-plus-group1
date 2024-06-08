@@ -15,7 +15,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -38,20 +37,26 @@ public class PayTestController {
     String ALIPAY_PUBLIC_KEY;
 
 
-
     //使用二维码生成器将本请求存储到二维码中，扫描二维码进行支付测试
     //发现不能重复支付同一个订单号
     @RequestMapping("/alipaytest")
     public void doPost(HttpServletRequest httpRequest,
                        HttpServletResponse httpResponse) throws ServletException, IOException, AlipayApiException {
-        AlipayClient alipayClient = new DefaultAlipayClient(AlipayConfig.URL, APP_ID, APP_PRIVATE_KEY, AlipayConfig.FORMAT, AlipayConfig.CHARSET, ALIPAY_PUBLIC_KEY,AlipayConfig.SIGNTYPE);
+        AlipayClient alipayClient = new DefaultAlipayClient(
+                AlipayConfig.URL,
+                APP_ID,
+                APP_PRIVATE_KEY,
+                AlipayConfig.FORMAT,
+                AlipayConfig.CHARSET,
+                ALIPAY_PUBLIC_KEY,
+                AlipayConfig.SIGNTYPE);
         //获得初始化的AlipayClient
         AlipayTradeWapPayRequest alipayRequest = new AlipayTradeWapPayRequest();//创建API对应的request
 //        alipayRequest.setReturnUrl("http://domain.com/CallBack/return_url.jsp");
 //        alipayRequest.setNotifyUrl("http://domain.com/CallBack/notify_url.jsp");//在公共参数中设置回跳和通知地址
-        alipayRequest.setNotifyUrl(" http://q524s4.natappfree.cc/orders/paynotifytest");//在公共参数中设置回跳和通知地址
+        alipayRequest.setNotifyUrl(" http://kva7wj.natappfree.cc/orders/paynotifytest");//在公共参数中设置回跳和通知地址
         alipayRequest.setBizContent("{" +
-                "    \"out_trade_no\":\"202210100010101007\"," +
+                "    \"out_trade_no\":\"202210100010101010\"," +
                 "    \"total_amount\":0.1," +
                 "    \"subject\":\"Iphone6 16G\"," +
                 "    \"product_code\":\"QUICK_WAP_WAY\"" +
@@ -65,10 +70,10 @@ public class PayTestController {
 
     //接收通知
     @PostMapping("/paynotifytest")
-    public void paynotifytest(HttpServletRequest request,HttpServletResponse response) throws IOException, AlipayApiException {
-        Map<String,String> params = new HashMap<String,String>();
+    public void paynotifytest(HttpServletRequest request, HttpServletResponse response) throws IOException, AlipayApiException {
+        Map<String, String> params = new HashMap<String, String>();
         Map requestParams = request.getParameterMap();
-        for (Iterator iter = requestParams.keySet().iterator(); iter.hasNext();) {
+        for (Iterator iter = requestParams.keySet().iterator(); iter.hasNext(); ) {
             String name = (String) iter.next();
             String[] values = (String[]) requestParams.get(name);
             String valueStr = "";
@@ -87,18 +92,18 @@ public class PayTestController {
         //boolean AlipaySignature.rsaCheckV1(Map<String, String> params, String publicKey, String charset, String sign_type)
         boolean verify_result = AlipaySignature.rsaCheckV1(params, ALIPAY_PUBLIC_KEY, AlipayConfig.CHARSET, "RSA2");
 
-        if(verify_result) {//验证成功
+        if (verify_result) {//验证成功
             //////////////////////////////////////////////////////////////////////////////////////////
             //请在这里加上商户的业务逻辑程序代码
 
             //商户订单号
-            String out_trade_no = new String(request.getParameter("out_trade_no").getBytes("ISO-8859-1"),"UTF-8");
+            String out_trade_no = new String(request.getParameter("out_trade_no").getBytes("ISO-8859-1"), "UTF-8");
             //支付宝交易号
 
-            String trade_no = new String(request.getParameter("trade_no").getBytes("ISO-8859-1"),"UTF-8");
+            String trade_no = new String(request.getParameter("trade_no").getBytes("ISO-8859-1"), "UTF-8");
 
             //交易状态
-            String trade_status = new String(request.getParameter("trade_status").getBytes("ISO-8859-1"),"UTF-8");
+            String trade_status = new String(request.getParameter("trade_status").getBytes("ISO-8859-1"), "UTF-8");
 
 
             //——请根据您的业务逻辑来编写程序（以下代码仅作参考）——
@@ -123,7 +128,7 @@ public class PayTestController {
                 //如果签约的是可退款协议，那么付款完成后，支付宝系统发送该交易状态通知。
             }
             response.getWriter().write("success");
-        }else{
+        } else {
             response.getWriter().write("fail");
         }
 

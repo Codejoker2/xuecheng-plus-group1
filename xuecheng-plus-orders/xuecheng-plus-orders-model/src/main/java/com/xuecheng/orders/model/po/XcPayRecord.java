@@ -1,8 +1,6 @@
 package com.xuecheng.orders.model.po;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import lombok.ToString;
 
@@ -26,6 +24,7 @@ public class XcPayRecord implements Serializable {
     /**
      * 支付记录号
      */
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
