@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xuecheng.base.exception.XuechengPlusException;
 import com.xuecheng.base.utils.IdWorkerUtils;
 import com.xuecheng.base.utils.QRCodeUtil;
+import com.xuecheng.messagesdk.model.po.MqMessage;
+import com.xuecheng.messagesdk.service.MqMessageService;
+import com.xuecheng.orders.config.PayNotifyConfig;
 import com.xuecheng.orders.mapper.XcOrdersGoodsMapper;
 import com.xuecheng.orders.mapper.XcOrdersMapper;
 import com.xuecheng.orders.mapper.XcPayRecordMapper;
@@ -17,15 +20,23 @@ import com.xuecheng.orders.model.po.XcPayRecord;
 import com.xuecheng.orders.service.OrderService;
 import com.xuecheng.orders.service.PayService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageBuilder;
+import org.springframework.amqp.core.MessageDeliveryMode;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.concurrent.FailureCallback;
+import org.springframework.util.concurrent.SuccessCallback;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -53,6 +64,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Resource
     private XcPayRecordMapper payRecordMapper;
+
+    @Resource
+    private RabbitTemplate rabbitTemplate;
+
+    @Resource
+    private MqMessageService mqMessageService;
 
     @Override
     public PayRecordDto createOrder(String userId, AddOrderDto addOrderDto) {
@@ -112,7 +129,17 @@ public class OrderServiceImpl implements OrderService {
         //保存支付成功状态到订单支付记录表
         XcPayRecord xcPayRecordNew = savePayResult2OrdersReCord(payStatus);
         //保存支付成功状态到订单表
-        savePayResult2Orders(xcPayRecordNew);
+        XcOrders xcOrders = savePayResult2Orders(xcPayRecordNew);
+
+        //把订单支付成功的消息发送给mq,让学习中心更新用户的课程表
+        //1.先将消息保存到数据库
+        MqMessage mqMessage = mqMessageService.addMessage(
+                "payresult_notify",
+                xcOrders.getOutBusinessId(),
+                xcOrders.getOrderType(),
+                null);
+        //2.发送消息到mq
+        notifyPayResult(mqMessage);
     }
 
     @Transactional
@@ -121,6 +148,35 @@ public class OrderServiceImpl implements OrderService {
         //调用支付服务查询支付宝返回的支付信息，并提取出所需要的信息
         PayStatusDto payStatusDto = payService.paynotify(request, response);
         currentProxy.saveAliPayStatus(payStatusDto);
+    }
+
+    @Override
+    public void notifyPayResult(MqMessage message) {
+        //1.消息体，转json
+        String msg = JSON.toJSONString(message);
+        //设置消息持久化
+        Message msgObj = MessageBuilder.withBody(msg.getBytes(StandardCharsets.UTF_8))
+                .setDeliveryMode(MessageDeliveryMode.PERSISTENT)
+                .build();
+        //2.全局唯一的消息ID,需要封装到CorrelationData中
+        CorrelationData correlationData = new CorrelationData(message.getId().toString());
+        //3.添加callback
+        correlationData.getFuture().addCallback(
+                result -> {
+                    if (result.isAck()) {
+                        // 3.1.ack，消息成功
+                        log.debug("通知支付结果消息发送成功, ID:{}", correlationData.getId());
+                        //删除消息表中的记录
+                        mqMessageService.completed(message.getId());
+                    } else {
+                        // 3.2.nack，消息失败
+                        log.error("通知支付结果消息发送失败, ID:{}, 原因{}", correlationData.getId(), result.getReason());
+                    }
+                },
+                ex -> log.error("消息发送异常, ID:{}, 原因{}", correlationData.getId(), ex.getMessage())
+        );
+        //4.发送消息
+        rabbitTemplate.convertAndSend(PayNotifyConfig.PAYNOTIFY_EXCHANGE_FANOUT, "", msgObj,correlationData);
     }
 
     private void verifyPayResult(PayStatusDto payStatus) {
@@ -171,7 +227,7 @@ public class OrderServiceImpl implements OrderService {
         return result;
     }
 
-    private void savePayResult2Orders(XcPayRecord xcPayRecordNew) {
+    private XcOrders savePayResult2Orders(XcPayRecord xcPayRecordNew) {
         Long orderId = xcPayRecordNew.getOrderId();
         //查询订单信息
         XcOrders xcOrder = ordersMapper.selectOne(new LambdaQueryWrapper<XcOrders>()
@@ -189,6 +245,7 @@ public class OrderServiceImpl implements OrderService {
             log.info("更新订单表状态失败,订单号:{}", orderId);
             XuechengPlusException.cast("更新订单表状态失败");
         }
+        return xcOrder;
     }
 
     private XcOrders saveXcOrders(String userId, AddOrderDto dto) {
@@ -211,7 +268,7 @@ public class OrderServiceImpl implements OrderService {
         XcOrders xcOrders = new XcOrders();
         xcOrders.setTotalPrice(price);
         xcOrders.setCreateDate(LocalDateTime.now());
-        xcOrders.setStatus("600001");//未支付
+        xcOrders.setStatus("601001");//未支付
         xcOrders.setUserId(userId);
         xcOrders.setOrderType(orderType);
         xcOrders.setOrderName(orderName);
@@ -245,7 +302,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         //防止重复支付问题
-        if (orders.getStatus().equals("600002")) {
+        if (orders.getStatus().equals("601002")) {
             throw new XuechengPlusException("订单已支付");
         }
         Long ordersId = orders.getId();

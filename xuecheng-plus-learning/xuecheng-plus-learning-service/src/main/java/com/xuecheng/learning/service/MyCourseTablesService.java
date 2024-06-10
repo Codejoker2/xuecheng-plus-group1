@@ -35,4 +35,11 @@ public interface MyCourseTablesService {
     public XcCourseTablesDto getLearningStatus(String userId, Long courseId);
 
     PageResult<XcCourseTables> selectCourseTablePage(String userId, MyCourseTableParams params);
+
+    /**
+     * 付费课程支付成功后回调
+     * @param chooseCourseId 选课记录主键
+     * @return
+     */
+    boolean saveChooseCourseSuccess(String chooseCourseId);
 }

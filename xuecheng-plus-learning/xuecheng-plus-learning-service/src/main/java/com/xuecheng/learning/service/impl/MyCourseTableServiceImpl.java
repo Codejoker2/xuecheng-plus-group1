@@ -85,7 +85,7 @@ public class MyCourseTableServiceImpl implements MyCourseTablesService {
         //2.判断是否过期
         boolean isBefore = xcCourseTables.getValidtimeEnd().isBefore(LocalDateTime.now());
         if (isBefore) {
-            dto.setLearnStatus("702002");
+            dto.setLearnStatus("702003");
             return dto;
         }
 
@@ -149,6 +149,32 @@ public class MyCourseTableServiceImpl implements MyCourseTablesService {
             throw new XuechengPlusException("插入课程：" + coursePublish.getId() + "到选课记录表失败！");
         }
         return chooseCourse;
+    }
+
+    @Override
+    public boolean saveChooseCourseSuccess(String chooseCourseId) {
+        //根据id找到对应的选课记录
+        XcChooseCourse chooseCourse = chooseCourseMapper.selectById(chooseCourseId);
+        if (chooseCourse == null) {
+            log.debug("接收购买课程的消息，根据选课id从数据库找不到选课记录,选课id:{}", chooseCourseId);
+            return false;
+        }
+        //选课状态
+        String status = chooseCourse.getStatus();
+        //只有当未支付时才更新为已支付
+        if (!"701002".equals(status)) {
+            return false;
+        }
+        //更新选课记录的状态为支付成功
+        chooseCourse.setStatus("701001");
+        int i = chooseCourseMapper.updateById(chooseCourse);
+        if (i <= 0) {
+            log.debug("添加选课记录失败:{}", chooseCourse);
+            XuechengPlusException.cast("添加选课记录失败");
+        }
+        //添加到我的课程表中
+        addCourseTables(chooseCourse);
+        return true;
     }
 
     private XcCourseTables addCourseTables(XcChooseCourse chooseCourse) {
