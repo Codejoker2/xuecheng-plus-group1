@@ -185,18 +185,23 @@ public class MyCourseTableServiceImpl implements MyCourseTablesService {
         }
         //查找我的课程表
         XcCourseTables xcCourseTables = getXcCourseTables(chooseCourse.getUserId(), chooseCourse.getCourseId());
-        //如果已存在就不用再次添加，直接返回即可
-        if (xcCourseTables != null) {
-            return xcCourseTables;
-        }
+
         //给courseTablesNew赋值
         XcCourseTables courseTablesNew = new XcCourseTables();
         BeanUtils.copyProperties(chooseCourse, courseTablesNew);
         courseTablesNew.setChooseCourseId(chooseCourse.getId());
         courseTablesNew.setCourseType(chooseCourse.getOrderType());
 
+        //如果已存在就不用再次添加，更新
+        //当用户重新下单后就可以自动更新有效期
+        if (xcCourseTables != null) {
+            //存在则更新
+            courseTablesMapper.updateById(courseTablesNew);
+            return courseTablesNew;
+        }
+        //不存在则插入
         //插入到我的课程表中
-        int insert = courseTablesMapper.insert(courseTablesNew);
+        courseTablesMapper.insert(courseTablesNew);
         return courseTablesNew;
     }
 
